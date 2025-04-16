@@ -1,18 +1,28 @@
 from flask import Flask
+from config import Config
+from flask_sqlalchemy import SQLAlchemy
 
-app = Flask(__name__)
+db = SQLAlchemy()
 
-@app.route('/')
-def hello():
-    return "Hello, World from the Compensation API!"
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(Config)
 
-@app.route('/api/jobs/upload', methods=['POST'])
-def upload_job_description():
-    return "Upload endpoint reached"
+    # Initialize database connection
+    db.init_app(app)
 
-@app.route('/api/jobs/search', methods=['GET'])
-def search_jobs():
-    return "Search endpoint reached"
+    # Import and register blueprints
+    from routes.jobs import jobs_bp
+    from routes.auth import auth_bp  # Stub for authentication endpoints
+    app.register_blueprint(jobs_bp, url_prefix="/api/v1/jobs")
+    app.register_blueprint(auth_bp, url_prefix="/api/v1/auth")
+
+    @app.route('/')
+    def home():
+        return "erynAI Compensation Intelligence API!"
+
+    return app
 
 if __name__ == '__main__':
+    app = create_app()
     app.run(debug=True)
