@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from services.etl_service import run_etl
+from app.services.etl_service import run_etl
 from pydantic import BaseModel
 
 class DataSource(BaseModel):

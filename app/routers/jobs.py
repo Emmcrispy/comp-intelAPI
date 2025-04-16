@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from services.nlp_service import process_job_description
+from app.services.nlp_service import process_job_description
 from pydantic import BaseModel
 
 class JobDescription(BaseModel):
