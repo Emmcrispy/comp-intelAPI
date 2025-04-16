@@ -1,28 +1,17 @@
-from flask import Flask
-from config import Config
-from flask_sqlalchemy import SQLAlchemy
+from fastapi import FastAPI
+from routers import jobs, data, reports
+from dependencies.auth import setup_oauth
+from dotenv import load_dotenv
+import logging
 
-db = SQLAlchemy()
+load_dotenv()
 
-def create_app():
-    app = Flask(__name__)
-    app.config.from_object(Config)
+logging.basicConfig(level=logging.INFO)
 
-    # Initialize database connection
-    db.init_app(app)
+app = FastAPI(title="eryn Compensation Intelligence API")
 
-    # Import and register blueprints
-    from routes.jobs import jobs_bp
-    from app.dependencies.auth import auth_bp  # Stub for authentication endpoints
-    app.register_blueprint(jobs_bp, url_prefix="/api/v1/jobs")
-    app.register_blueprint(auth_bp, url_prefix="/api/v1/auth")
+app.include_router(jobs.router, prefix="/api/jobs", tags=["Jobs"])
+app.include_router(data.router, prefix="/api/data", tags=["Data"])
+app.include_router(reports.router, prefix="/api/reports", tags=["Reports"])
 
-    @app.route('/')
-    def home():
-        return "erynAI Compensation Intelligence API!"
-
-    return app
-
-if __name__ == '__main__':
-    app = create_app()
-    app.run(debug=True)
+setup_oauth(app)
