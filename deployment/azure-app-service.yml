@@ -1,0 +1,30 @@
+name: erynapi-appservice
+location: eastus
+resourceGroup: YourResourceGroup
+
+properties:
+  serverFarmId: YourAppServicePlan
+  siteConfig:
+    linuxFxVersion: DOCKER|yourregistry.azurecr.io/erynapi:latest
+    alwaysOn: true
+    appSettings:
+      - name: WEBSITES_PORT
+        value: "8000"
+      - name: DB_SERVER
+        value: "<your-db-server>.database.windows.net"
+      - name: DB_NAME
+        value: "<your-db-name>"
+      - name: DB_USER
+        value: "<your-db-user>"
+      - name: DB_PASSWORD
+        value: "<your-db-password>"
+      - name: AZURE_NLP_KEY
+        value: "<your-azure-nlp-key>"
+      - name: AZURE_NLP_ENDPOINT
+        value: "<your-azure-nlp-endpoint>"
+      - name: DOCKER_REGISTRY_SERVER_URL
+        value: "https://yourregistry.azurecr.io"
+      - name: DOCKER_REGISTRY_SERVER_USERNAME
+        value: "<registry-username>"
+      - name: DOCKER_REGISTRY_SERVER_PASSWORD
+        value: "<registry-password>"
