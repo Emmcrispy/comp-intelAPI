@@ -13,7 +13,7 @@ def create_app():
 
     # Import and register blueprints
     from routes.jobs import jobs_bp
-    from routes.auth import auth_bp  # Stub for authentication endpoints
+    from app.dependencies.auth import auth_bp  # Stub for authentication endpoints
     app.register_blueprint(jobs_bp, url_prefix="/api/v1/jobs")
     app.register_blueprint(auth_bp, url_prefix="/api/v1/auth")
 

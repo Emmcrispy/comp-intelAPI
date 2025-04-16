@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app import db
+from app.main import db
 from models import Job
 
 jobs_bp = Blueprint("jobs", __name__)
@@ -25,7 +25,11 @@ def upload_job():
     db.session.add(job)
     db.session.commit()
 
-    return jsonify({"message": "Job uploaded successfully", "job_id": job.id}), 201
+    return jsonify({
+        "message": "Job uploaded successfully",
+        "job_id": job.id,
+        "job": job.to_dict()
+    }), 201
 
 @jobs_bp.route("/search", methods=["GET"])
 def search_jobs():
@@ -33,7 +37,7 @@ def search_jobs():
     Endpoint to search for job descriptions.
     Supports filtering by query parameters (e.g., title keyword).
     """
-    query = request.args.get("q")
+    query = request.args.get("q", None)
     if query:
         jobs = Job.query.filter(Job.title.ilike(f"%{query}%")).all()
     else:

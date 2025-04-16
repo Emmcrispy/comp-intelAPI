@@ -1,4 +1,4 @@
-from app import db
+from app.main import db
 
 class Job(db.Model):
     id = db.Column(db.Integer, primary_key=True)
