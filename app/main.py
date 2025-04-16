@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from routers import jobs, data, reports
-from dependencies.auth import setup_oauth
+from app.routers import jobs, data, reports
+from app.dependencies.auth import setup_oauth
 from dotenv import load_dotenv
 import logging
 

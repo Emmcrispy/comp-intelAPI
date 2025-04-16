@@ -1,5 +1,86 @@
+# ──────────────────────────────────────────────
+# PYTHON & FASTAPI
+# ──────────────────────────────────────────────
 __pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
 *.pyc
-*.egg-info/
-venv/
+
+# Environment files
 .env
+.env.*
+
+# Local dev settings / secrets
+*.sqlite3
+instance/
+*.db
+*.log
+
+# Editor-specific
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Bytecode cache
+*.pycache
+
+# ──────────────────────────────────────────────
+# TESTING
+# ──────────────────────────────────────────────
+coverage/
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+*.pytest_cache/
+.pytest_cache/
+*.mochawesome.json
+
+# ──────────────────────────────────────────────
+# DEPLOYMENT / BUILD ARTIFACTS
+# ──────────────────────────────────────────────
+build/
+dist/
+*.egg-info/
+*.eggs/
+
+# Docker & containers
+*.tar
+*.img
+docker-compose.override.yml
+.dockerignore
+
+# Azure & cloud configs
+*.azure
+.azure-pipelines/
+*.acrconfig
+*.deployment
+
+# Logs and temp files
+*.log
+*.tmp
+*.bak
+*.old
+
+# ──────────────────────────────────────────────
+# JUPYTER NOTEBOOKS / IPYNB
+# ──────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ──────────────────────────────────────────────
+# OS-SPECIFIC
+# ──────────────────────────────────────────────
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Linux
+*~
