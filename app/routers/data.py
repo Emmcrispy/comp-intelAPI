@@ -1,15 +1,22 @@
 from fastapi import APIRouter, HTTPException
-from app.services.etl_service import run_etl_pipeline
 from pydantic import BaseModel
+from enum import Enum
+from app.services.etl_service import run_etl_pipeline
+
+# Better validation using Enum
+class ETLSource(str, Enum):
+    GSA_CALC = "GSA_CALC"
+    SAM_GOV = "SAM_GOV"
 
 class DataSource(BaseModel):
-    source: str  # 'GSA_CALC' or 'SAM_GOV'
+    source: ETLSource
 
 router = APIRouter()
 
 @router.post("/integrate", status_code=202)
 async def integrate_data(source: DataSource):
-    if source.source not in ["GSA_CALC", "SAM_GOV"]:
-        raise HTTPException(status_code=400, detail="Invalid data source.")
-    etl_status = await run_etl(source.source)
-    return {"status": "ETL started", "detail": etl_status}
+    try:
+        result = await run_etl_pipeline(source.source)
+        return {"status": "ETL started", "detail": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
