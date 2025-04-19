@@ -1,5 +1,5 @@
 import os
-from services.etl_service import run_etl_pipeline
+from app.services.etl_service import run_etl_pipeline
 
 def ingest_all(directory="data/uploads"):
     for file in os.listdir(directory):

@@ -1,4 +1,4 @@
-from services.db_services import get_connection
+from app.services.db_services import get_connection
 
 schema_sql = """
 CREATE TABLE IF NOT EXISTS job_roles (

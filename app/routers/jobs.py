@@ -1,8 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from typing import Optional
-from services.etl_service import run_etl_pipeline
-from services.classification_service import get_taxonomy_options
-from services.profile_generator import generate_role_profile
+from app.services.etl_service import run_etl_pipeline
+from app.services.classification_service import get_taxonomy_options
+from app.services.profile_generator import generate_role_profile
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 

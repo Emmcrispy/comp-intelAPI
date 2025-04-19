@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from app.config.settings import settings
 from app.routers import jobs, data, reports
+from app.services.etl_service import run_etl_pipeline
 
 app = FastAPI()
 
