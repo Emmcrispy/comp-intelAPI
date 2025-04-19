@@ -1,22 +1,37 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from app.services.nlp_service import process_job_description
-from pydantic import BaseModel
+from fastapi import APIRouter, UploadFile, File, HTTPException
+from typing import Optional
+from services.etl_service import run_etl_pipeline
+from services.classification_service import get_taxonomy_options
+from services.profile_generator import generate_role_profile
 
-class JobDescription(BaseModel):
-    description: str
+router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 
-router = APIRouter()
+@router.post("/upload")
+def upload_csv(file: UploadFile = File(...)):
+    if not file.filename.endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Only CSV files are accepted.")
 
-@router.post("/upload", status_code=status.HTTP_201_CREATED)
-async def upload_job(job: JobDescription):
-    if not job.description:
-        raise HTTPException(status_code=400, detail="Description required.")
-    result = await process_job_description(job.description)
-    return {"status": "success", "processed": result}
+    file_path = f"temp_uploads/{file.filename}"
+    with open(file_path, "wb") as f:
+        f.write(file.file.read())
 
-@router.get("/search")
-async def search_jobs(keyword: str):
-    if not keyword:
-        raise HTTPException(status_code=400, detail="Keyword required.")
-    # Placeholder for matching logic integration
-    return {"matches": [{"title": "Data Analyst", "score": 97.5}]}
+    result = run_etl_pipeline(file_path)
+    return {"message": "Upload and ETL successful", "rows_loaded": result["rows_loaded"]}
+
+@router.get("/taxonomy/{stage}")
+def get_taxonomy(stage: str, job_type: Optional[str] = None, job_family: Optional[str] = None, sub_family: Optional[str] = None, single_role: Optional[str] = None):
+    previous_selection = {
+        "job_type": job_type,
+        "job_family": job_family,
+        "sub_family": sub_family,
+        "single_role": single_role
+    }
+    previous_selection = {k: v for k, v in previous_selection.items() if v}
+    return get_taxonomy_options(stage, previous_selection)
+
+@router.post("/generate-profile")
+def get_role_profile(role_data: dict):
+    """
+    Expects a dictionary with job_type, job_family, sub_family, single_role, career_level
+    """
+    return generate_role_profile(role_data)

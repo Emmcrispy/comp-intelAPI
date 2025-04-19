@@ -1,86 +1,72 @@
-# ──────────────────────────────────────────────
-# PYTHON & FASTAPI
-# ──────────────────────────────────────────────
+# ──────────────── PYTHON / FASTAPI ────────────────
 __pycache__/
 **/__pycache__/
 *.py[cod]
 *.pyo
 *.pyd
 *.pyc
+*.pycache
+*.db
+*.sqlite3
 
-# Environment files
+# ──────────────── ENVIRONMENT & CONFIG ────────────────
 .env
 .env.*
-
-# Local dev settings / secrets
-*.sqlite3
 instance/
-*.db
 *.log
+*.bak
+*.tmp
+*.old
 
-# Editor-specific
+# ──────────────── VIRTUAL ENVIRONMENTS ────────────────
+venv/
+.venv/
+env/
+.env/
+
+# ──────────────── EDITOR SETTINGS ────────────────
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Bytecode cache
-*.pycache
-
-# ──────────────────────────────────────────────
-# TESTING
-# ──────────────────────────────────────────────
+# ──────────────── TESTING ────────────────
 coverage/
 htmlcov/
-.tox/
-nosetests.xml
 coverage.xml
+nosetests.xml
 *.cover
-*.pytest_cache/
 .pytest_cache/
+.tox/
 *.mochawesome.json
 
-# ──────────────────────────────────────────────
-# DEPLOYMENT / BUILD ARTIFACTS
-# ──────────────────────────────────────────────
+# ──────────────── BUILD / DEPLOY ────────────────
 build/
 dist/
 *.egg-info/
 *.eggs/
-
-# Docker & containers
 *.tar
 *.img
+*.lock
+Dockerfile
 docker-compose.override.yml
 .dockerignore
 
-# Azure & cloud configs
+# ──────────────── AZURE / CLOUD ────────────────
 *.azure
 .azure-pipelines/
 *.acrconfig
 *.deployment
+.terraform/
+*.tfstate
+*.tfstate.backup
 
-# Logs and temp files
-*.log
-*.tmp
-*.bak
-*.old
-
-# ──────────────────────────────────────────────
-# JUPYTER NOTEBOOKS / IPYNB
-# ──────────────────────────────────────────────
+# ──────────────── NOTEBOOKS ────────────────
 .ipynb_checkpoints/
 
-# ──────────────────────────────────────────────
-# OS-SPECIFIC
-# ──────────────────────────────────────────────
-# macOS
+# ──────────────── OS-SPECIFIC ────────────────
 .DS_Store
-
-# Windows
 Thumbs.db
 ehthumbs.db
 desktop.ini
-
-# Linux
 *~

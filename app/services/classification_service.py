@@ -1,12 +1,13 @@
+from services.cache_service import cache_get, cache_set
+
 def get_taxonomy_options(stage: str, previous_selection: dict = None):
-    """
-    Dynamically returns next level of the job taxonomy based on previous selection.
-    """
+    cache_key = f"{stage}-" + "-".join([f"{k}:{v}" for k, v in sorted(previous_selection.items())]) if previous_selection else stage
+    cached_result = cache_get(cache_key)
+    if cached_result:
+        return cached_result
 
     from sqlalchemy import create_engine, text
     engine = create_engine(DB_URL)
-    engine = create_engine(DB_URL)
-
 
     query_map = {
         "job_type": "SELECT DISTINCT job_type FROM job_roles ORDER BY job_type;",
@@ -18,5 +19,8 @@ def get_taxonomy_options(stage: str, previous_selection: dict = None):
 
     with engine.connect() as conn:
         query = text(query_map[stage])
-        results = conn.execute(query, **previous_selection or  {}).fetchall()
-        return [row[0] for row in results]
+        results = conn.execute(query, previous_selection or {}).fetchall()
+        output = [row[0] for row in results]
+
+    cache_set(cache_key, output)
+    return output

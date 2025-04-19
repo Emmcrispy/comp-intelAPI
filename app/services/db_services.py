@@ -2,6 +2,9 @@ import os
 import pyodbc
 from dotenv import load_dotenv
 
+redis_host = settings.REDIS_HOST
+db_url = settings.DATABASE_URL
+
 load_dotenv()
 
 def get_db_connection():
