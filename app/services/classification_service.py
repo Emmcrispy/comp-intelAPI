@@ -1,5 +1,5 @@
 from app.services.cache_service import cache_get, cache_set
-from config.settings import settings
+from app.config.settings import settings
 
 redis_host = settings.REDIS_HOST
 db_url = settings.DATABASE_URL

@@ -1,6 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
+from app.config.settings import settings
 import os
 
 load_dotenv()

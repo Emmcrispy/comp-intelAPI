@@ -1,6 +1,6 @@
 import redis
 import json
-from config.settings import settings
+from app.config.settings import settings
 
 pool = redis.ConnectionPool(
     host=settings.REDIS_HOST,

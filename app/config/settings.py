@@ -1,16 +1,18 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  # Load .env values if present (for local dev)
+load_dotenv()
 
 class Settings:
+    APP_NAME = "Comp Intel API"
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
     USE_KEY_VAULT = os.getenv("USE_KEY_VAULT", "false").lower() == "true"
 
     if USE_KEY_VAULT:
         from azure.identity import DefaultAzureCredential
         from azure.keyvault.secrets import SecretClient
 
-        KEY_VAULT_URI = os.getenv("KEY_VAULT_URI", "https://erynKeyVault.vault.azure.net/")
+        KEY_VAULT_URI = os.getenv("KEY_VAULT_URI")
         credential = DefaultAzureCredential()
         client = SecretClient(vault_url=KEY_VAULT_URI, credential=credential)
 
@@ -23,6 +25,6 @@ class Settings:
         REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
         REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
         REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
-        DATABASE_URL = os.getenv("DATABASE_URL", "mysql://user:pass@localhost:3306/mydb")
+        DATABASE_URL = os.getenv("DATABASE_URL")
 
 settings = Settings()
