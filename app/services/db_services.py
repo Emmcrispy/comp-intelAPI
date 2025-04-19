@@ -1,6 +1,7 @@
 import os
 import pyodbc
 from dotenv import load_dotenv
+from config.settings import settings
 
 redis_host = settings.REDIS_HOST
 db_url = settings.DATABASE_URL

@@ -1,4 +1,8 @@
 from services.cache_service import cache_get, cache_set
+from config.settings import settings
+
+redis_host = settings.REDIS_HOST
+db_url = settings.DATABASE_URL
 
 def get_taxonomy_options(stage: str, previous_selection: dict = None):
     cache_key = f"{stage}-" + "-".join([f"{k}:{v}" for k, v in sorted(previous_selection.items())]) if previous_selection else stage
