@@ -10,20 +10,33 @@ UPLOAD_DIR = "temp_uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/upload", status_code=201)
-async def upload_csv(file: UploadFile = File(...)):
+async def upload_job_file(file: UploadFile = File(...)):
     try:
         file_path = os.path.join(UPLOAD_DIR, file.filename)
-
         with open(file_path, "wb") as f:
             f.write(await file.read())
 
-        # 🔥 FIXED: Sync function should not be awaited
-        result = run_etl_pipeline(file_path)
+        ext = os.path.splitext(file.filename)[1].lower()
+        if ext == ".csv":
+            df = pd.read_csv(file_path)
+        elif ext == ".json":
+            df = pd.read_json(file_path)
+        elif ext in [".pdf", ".docx"]:
+            from app.utils.text_extractor import extract_text_from_file
+            extracted_rows = extract_text_from_file(file_path)
+            df = pd.DataFrame(extracted_rows)
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported file type")
+
+        # Pass to shared ETL
+        result = run_etl_pipeline_from_df(df, file_path)
 
         return {
             "status": result["status"],
             "rows_processed": result["rows_loaded"],
-            "file": file.filename
+            "rows_failed": result["rows_failed"],
+            "file": file.filename,
+            "errors": result["error_log_path"]
         }
 
     except Exception as e:
