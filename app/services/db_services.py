@@ -1,26 +1,15 @@
-import os
-import pyodbc
-from dotenv import load_dotenv
-from config.settings import settings
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from app.config.settings import settings
 
-redis_host = settings.REDIS_HOST
-db_url = settings.DATABASE_URL
+# Use the same DATABASE_URL you've validated
+engine = create_engine(settings.DATABASE_URL, echo=False, future=True)
+SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
-load_dotenv()
-
-def get_db_connection():
+def get_db():
+    """FastAPI dependency for DB session."""
+    db = SessionLocal()
     try:
-        connection_string = (
-            f"DRIVER={{{os.getenv('DB_DRIVER')}}};"
-            f"SERVER={os.getenv('DB_SERVER')},{os.getenv('DB_PORT')};"
-            f"DATABASE={os.getenv('DB_NAME')};"
-            f"UID={os.getenv('DB_USER')};"
-            f"PWD={os.getenv('DB_PASSWORD')};"
-            "Encrypt=no;"  # Local dev: disable encryption unless needed
-        )
-
-        conn = pyodbc.connect(connection_string)
-        return conn
-    except pyodbc.Error as e:
-        print("❌ DB connection failed:", e)
-        raise
+        yield db
+    finally:
+        db.close()

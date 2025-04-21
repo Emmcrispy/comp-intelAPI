@@ -1,22 +1,36 @@
+import os
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from typing import Optional
 from app.services.etl_service import run_etl_pipeline
 from app.services.classification_service import get_taxonomy_options
 from app.services.profile_generator import generate_role_profile
 
-router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
+router = APIRouter()
 
-@router.post("/upload")
-def upload_csv(file: UploadFile = File(...)):
-    if not file.filename.endswith(".csv"):
-        raise HTTPException(status_code=400, detail="Only CSV files are accepted.")
+UPLOAD_DIR = "temp_uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-    file_path = f"temp_uploads/{file.filename}"
-    with open(file_path, "wb") as f:
-        f.write(file.file.read())
+@router.post("/upload", status_code=201)
+async def upload_csv(file: UploadFile = File(...)):
+    try:
+        file_path = os.path.join(UPLOAD_DIR, file.filename)
 
-    result = run_etl_pipeline(file_path)
-    return {"message": "Upload and ETL successful", "rows_loaded": result["rows_loaded"]}
+        # Save uploaded file
+        with open(file_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+
+        # ✅ Await the ETL pipeline
+        result = await run_etl_pipeline(file_path)
+
+        return {
+            "status": result["status"],
+            "rows_processed": result["rows_loaded"],
+            "file": file.filename
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"ETL failed: {str(e)}")
 
 @router.get("/taxonomy/{stage}")
 def get_taxonomy(stage: str, job_type: Optional[str] = None, job_family: Optional[str] = None, sub_family: Optional[str] = None, single_role: Optional[str] = None):
@@ -31,7 +45,4 @@ def get_taxonomy(stage: str, job_type: Optional[str] = None, job_family: Optiona
 
 @router.post("/generate-profile")
 def get_role_profile(role_data: dict):
-    """
-    Expects a dictionary with job_type, job_family, sub_family, single_role, career_level
-    """
     return generate_role_profile(role_data)

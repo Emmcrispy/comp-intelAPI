@@ -1,0 +1,25 @@
+body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 2rem;
+}
+
+form {
+    display: grid;
+    gap: 1rem;
+    max-width: 500px;
+}
+
+button {
+    padding: 0.5rem 1rem;
+    background-color: #114488;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+#profile-result {
+    white-space: pre-wrap;
+    margin-top: 2rem;
+    background: #f0f0f0;
+    padding: 1rem;
+}
