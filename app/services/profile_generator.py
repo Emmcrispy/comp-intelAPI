@@ -1,18 +1,13 @@
-def generate_role_profile(role_info: dict):
-
-    job_type = role_info.get("job_type")
-    job_family = role_info.get("job_family")
-    sub_family = role_info.get("sub_family")
-    role = role_info.get("single_role")
-    level = role_info.get("career_level")
-
-
-    summary = f"{role} is a {level.lower()} position in the {job_family.lower()} function, under the {job_type.lower()} umbrella. The role focuses on delivering results within the {sub_family.lower()} sub-domain."
-    functions = [f"Execute responsibilities aligned to the {sub_family} function.", "Ensure compliance with policy and process.", "Collaborate cross-functionally on strategic goals."]
-    qualifications = [f"{level} level experience in {job_family}.", "Relevant degree or certification.", "Strong communication and analytical skills."]
-
+def generate_role_profile(role_data: dict):
     return {
-        "summary": summary,
-        "essential_functions": functions,
-        "qualifications": qualifications
+        "summary": f"A {role_data['career_level']} {role_data['single_role']} working in {role_data['sub_family']}, part of the {role_data['job_family']} family ({role_data['job_type']}).",
+        "essential_functions": [
+            f"Perform key functions of {role_data['single_role']}",
+            f"Support {role_data['job_family']} objectives",
+            f"Collaborate across {role_data['job_type']} departments"
+        ],
+        "qualifications": [
+            f"{role_data['career_level']} level education and experience required",
+            "Strong communication and teamwork"
+        ]
     }

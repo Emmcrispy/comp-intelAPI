@@ -1,27 +1,14 @@
-import redis
-import json
-from app.config.settings import settings
+# app/services/cache_service.py
 
-pool = redis.ConnectionPool(
-    host=settings.REDIS_HOST,
-    port=settings.REDIS_PORT,
-    password=settings.REDIS_PASSWORD,
-    ssl=True,
-    decode_responses=True
-)
+"""
+Local in-memory cache for development. Replaces Redis when not running in cloud.
+"""
 
-r = redis.Redis(connection_pool=pool)
+_cache = {}
 
 def cache_get(key: str):
-    try:
-        value = r.get(key)
-        return json.loads(value) if value else None
-    except Exception as e:
-        print(f"⚠️ Redis GET error: {e}")
-        return None
+    return _cache.get(key)
 
 def cache_set(key: str, data, ttl=3600):
-    try:
-        r.set(key, json.dumps(data), ex=ttl)
-    except Exception as e:
-        print(f"⚠️ Redis SET error: {e}")
+    # TTL is ignored in this basic local implementation
+    _cache[key] = data

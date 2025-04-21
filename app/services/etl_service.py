@@ -1,47 +1,49 @@
 import pandas as pd
 from sqlalchemy import create_engine
-from dotenv import load_dotenv
+from sqlalchemy.exc import SQLAlchemyError
 from app.config.settings import settings
-import os
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-
-
-load_dotenv()
-
-executor = ThreadPoolExecutor()
 
 def normalize_text(text):
     if not isinstance(text, str):
         return ""
     return text.strip().title()
 
-def load_and_clean_csv(file_path: str) -> pd.DataFrame:
-    df = pd.read_csv(file_path)
+def run_etl_pipeline(file_path: str):
+    try:
+        print("🚀 Starting ETL Pipeline...")
+        print(f"🔌 Using DB URL: {settings.DATABASE_URL}")
+        print(f"📄 Reading file: {file_path}")
 
-    for col in ['job_type', 'job_family', 'sub_family', 'single_role', 'career_level', 'country']:
-        if col in df.columns:
+        df = pd.read_csv(file_path)
+        print(f"✅ Loaded {len(df)} rows")
+
+        expected_columns = ['job_type', 'job_family', 'sub_family', 'single_role', 'career_level', 'country']
+        for col in expected_columns:
+            if col not in df.columns:
+                raise ValueError(f"Missing required column: '{col}'")
             df[col] = df[col].apply(normalize_text)
-        else:
-            raise ValueError(f"Missing required column: {col}")
 
-    return df
+        print("🧼 Normalized all required text fields.")
 
-def write_to_db(df: pd.DataFrame):
-    print("Connecting to DB with URL:", settings.DATABASE_URL)
-    engine = create_engine(settings.DATABASE_URL)
-    with engine.begin() as conn:
-        df.to_sql('job_roles', con=conn, if_exists='append', index=False)
+        engine = create_engine(settings.DATABASE_URL)
+        with engine.begin() as conn:
+            df.to_sql('job_roles', con=conn, if_exists='append', index=False)
 
-def _etl_from_file(file_path: str) -> dict:
-    df = load_and_clean_csv(file_path)
-    write_to_db(df)
-    return {"status": "success", "rows_loaded": len(df)}
+        print("✅ Successfully wrote data to job_roles table.")
 
-async def run_etl_pipeline(file_path: str) -> dict:
-    loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(executor, _etl_from_file, file_path)
+        return {
+            "status": "success",
+            "rows_loaded": len(df)
+        }
 
-def run_source_etl(source: str):
-    print(f"⚙️ Running ETL for {source}...")
-    return f"{source} integration completed"
+    except ValueError as ve:
+        print(f"❌ Column validation failed: {ve}")
+        raise ve
+
+    except SQLAlchemyError as se:
+        print(f"❌ Database write failed: {se}")
+        raise se
+
+    except Exception as e:
+        print(f"❌ ETL failed: {e}")
+        raise e

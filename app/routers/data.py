@@ -3,7 +3,6 @@ from pydantic import BaseModel
 from enum import Enum
 from app.services.etl_service import run_etl_pipeline
 
-# Better validation using Enum
 class ETLSource(str, Enum):
     GSA_CALC = "GSA_CALC"
     SAM_GOV = "SAM_GOV"
