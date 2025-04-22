@@ -8,4 +8,8 @@ class Settings:
     ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
     DATABASE_URL = os.getenv("DATABASE_URL")
 
+    def __init__(self):
+        if not self.DATABASE_URL:
+            raise ValueError("DATABASE_URL not set. Check your .env configuration.")
+
 settings = Settings()

@@ -14,21 +14,31 @@ def validate_row(row: dict, row_num: int) -> tuple[bool, str]:
             return False, f"Row {row_num}: Missing or empty '{field}'"
     return True, ""
 
-def run_etl_pipeline_from_df(df: pd.DataFrame, source_name: str = "upload"):
-    print("📄 Starting ETL from parsed DataFrame")
-    log_path = f"{os.path.splitext(source_name)[0]}_errors.csv"
+def run_etl_pipeline_from_df(df: pd.DataFrame, file_path: str):
+    print("🚀 ETL from DataFrame")
+    print("🔌 DB:", settings.DATABASE_URL)
 
     valid_rows = []
     error_log = []
 
+    df['title'] = ""
+    df['skills'] = ""
+    df['responsibilities'] = ""
+
     for i, row in df.iterrows():
         row_dict = {col: normalize_text(row.get(col, "")) for col in df.columns}
         is_valid, error = validate_row(row_dict, i + 2)
+
         if is_valid:
+            extracted = extract_nlp_fields(row_dict.get('description', ''))
+            row_dict['title'] = extracted['title']
+            row_dict['skills'] = "; ".join(extracted['skills'])
+            row_dict['responsibilities'] = "; ".join(extracted['responsibilities'])
             valid_rows.append(row_dict)
         else:
             error_log.append({"row": i + 2, "error": error})
 
+    log_path = os.path.splitext(file_path)[0] + "_errors.csv"
     if valid_rows:
         engine = create_engine(settings.DATABASE_URL)
         clean_df = pd.DataFrame(valid_rows)
@@ -37,6 +47,7 @@ def run_etl_pipeline_from_df(df: pd.DataFrame, source_name: str = "upload"):
 
     if error_log:
         pd.DataFrame(error_log).to_csv(log_path, index=False)
+        print(f"⚠️ Issues logged to {log_path}")
 
     return {
         "status": "success",

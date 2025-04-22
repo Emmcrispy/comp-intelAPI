@@ -8,7 +8,7 @@ from app.services.profile_generator import generate_role_profile
 from app.utils.text_extractor import extract_text_from_file
 from app.config.db import SessionLocal
 from app.models.job_roles import JobRole
-from sqlalchemy import update, select
+from sqlalchemy import update
 
 router = APIRouter()
 UPLOAD_DIR = "temp_uploads"
@@ -32,7 +32,6 @@ async def upload_job_file(file: UploadFile = File(...)):
         else:
             raise HTTPException(status_code=400, detail="Unsupported file type")
 
-        # Run ETL directly from DataFrame
         result = run_etl_pipeline_from_df(df, file_path)
 
         return {
@@ -63,20 +62,10 @@ def get_role_profile(role_data: dict):
 
 @router.patch("/{id}/attributes")
 async def update_job_attributes(id: int = Path(...), updates: dict = Body(...)):
-    allowed_fields = [
-        "job_type", "job_family", "sub_family", "single_role",
-        "career_level", "country", "title", "skills", "responsibilities", "description"
-    ]
-    invalid_keys = [k for k in updates.keys() if k not in allowed_fields]
-    if invalid_keys:
-        raise HTTPException(status_code=400, detail=f"Invalid fields: {', '.join(invalid_keys)}")
-
     db = SessionLocal()
     try:
         stmt = update(JobRole).where(JobRole.id == id).values(**updates)
-        result = db.execute(stmt)
-        if result.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Job not found.")
+        db.execute(stmt)
         db.commit()
         return {"status": "updated", "id": id, "updates": updates}
     finally:
