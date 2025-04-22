@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, Request, Form
+from fastapi import APIRouter, Depends, Request, Form, Path, Body, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import update
 from app.models.job_upload import JobUpload
 from app.config.db import get_db
 from fastapi.templating import Jinja2Templates
@@ -8,6 +9,7 @@ from fastapi.templating import Jinja2Templates
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
+# 🔍 HTML Review UI
 @router.get("/review", response_class=HTMLResponse)
 def review_jobs(request: Request, db: Session = Depends(get_db)):
     pending_jobs = db.query(JobUpload).filter(JobUpload.status == "pending").all()
@@ -27,3 +29,13 @@ def update_job(job_id: int, title: str = Form(...), skills: str = Form(...), res
     job.status = "reviewed"
     db.commit()
     return RedirectResponse(url="/review", status_code=303)
+
+# ✅ NEW: JSON PATCH for API-based status updates
+@router.patch("/review/uploads/{id}")
+def update_upload_status(id: int = Path(...), status: str = Body(...), db: Session = Depends(get_db)):
+    if status not in ["pending", "reviewed", "approved", "rejected"]:
+        raise HTTPException(status_code=400, detail="Invalid status value.")
+
+    db.query(JobUpload).filter(JobUpload.id == id).update({"status": status})
+    db.commit()
+    return {"status": "upload status updated", "id": id, "new_status": status}

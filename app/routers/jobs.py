@@ -1,7 +1,8 @@
 import os
 import pandas as pd
-from fastapi import APIRouter, UploadFile, File, HTTPException, Path, Body
+from fastapi import APIRouter, UploadFile, File, HTTPException, Path, Body, Query
 from typing import Optional
+from enum import Enum
 from app.services.etl_service import run_etl_pipeline_from_df
 from app.services.classification_service import get_taxonomy_options
 from app.services.profile_generator import generate_role_profile
@@ -44,17 +45,46 @@ async def upload_job_file(file: UploadFile = File(...)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"ETL failed: {str(e)}")
+class TaxonomyStage(str, Enum):
+    job_type = "job_type"
+    job_family = "job_family"
+    sub_family = "sub_family"
+    single_role = "single_role"
+    career_level = "career_level"  # ✅ Included
 
 @router.get("/taxonomy/{stage}")
-def get_taxonomy(stage: str, job_type: Optional[str] = None, job_family: Optional[str] = None, sub_family: Optional[str] = None, single_role: Optional[str] = None):
-    previous_selection = {
-        "job_type": job_type,
-        "job_family": job_family,
-        "sub_family": sub_family,
-        "single_role": single_role
-    }
-    previous_selection = {k: v for k, v in previous_selection.items() if v}
-    return get_taxonomy_options(stage, previous_selection)
+def get_taxonomy(stage: str,
+                job_type: str = Query(None),
+                job_family: str = Query(None),
+                sub_family: str = Query(None),
+                single_role: str = Query(None),
+                career_level: str = Query(None)):
+
+    try:
+        valid_stage_keys = ["job_type", "job_family", "sub_family", "single_role", "career_level"]
+        if stage not in valid_stage_keys:
+            raise HTTPException(status_code=400, detail=f"Invalid stage '{stage}'. Must be one of {valid_stage_keys}")
+
+        # Build filter dict based on previous selections
+        previous_selection = {}
+        if job_type:
+            previous_selection["job_type"] = job_type
+        if job_family:
+            previous_selection["job_family"] = job_family
+        if sub_family:
+            previous_selection["sub_family"] = sub_family
+        if single_role:
+            previous_selection["single_role"] = single_role
+        if career_level:
+            previous_selection["career_level"] = career_level
+
+        options = get_taxonomy_options(stage, previous_selection)
+        return {"stage": stage, "options": options}
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Server Error: {str(e)}")
 
 @router.post("/generate-profile")
 def get_role_profile(role_data: dict):
@@ -64,6 +94,10 @@ def get_role_profile(role_data: dict):
 async def update_job_attributes(id: int = Path(...), updates: dict = Body(...)):
     db = SessionLocal()
     try:
+        # Prevent status update here
+        if 'status' in updates:
+            updates.pop('status')
+
         stmt = update(JobRole).where(JobRole.id == id).values(**updates)
         db.execute(stmt)
         db.commit()
