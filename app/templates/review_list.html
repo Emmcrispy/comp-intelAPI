@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Pending Job Reviews</title>
+  </head>
+  <body>
+    <h2>📝 Pending Job Reviews</h2>
+    <ul>
+      {% for job in jobs %}
+      <li>
+        <strong>{{ job.description[:80] }}...</strong>
+        <a href="/review/{{ job.id }}">Review</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </body>
+</html>
