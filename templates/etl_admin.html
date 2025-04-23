@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ETL Admin Dashboard</title>
+  </head>
+  <body>
+    <h1>ETL Integration Dashboard</h1>
+    <form action="/admin/integrate/gsa" method="post">
+      <button type="submit">Run GSA_CALC ETL</button>
+    </form>
+    <form action="/admin/integrate/sam" method="post">
+      <button type="submit">Run SAM_GOV ETL</button>
+    </form>
+    {% if result %}
+    <h2>ETL Result:</h2>
+    <pre>{{ result }}</pre>
+    {% endif %}
+  </body>
+</html>
