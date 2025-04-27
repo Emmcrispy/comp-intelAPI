@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    depends_on:
+      - db
+    environment:
+      FLASK_ENV: development
+      DEV_DATABASE_URI: mssql+pyodbc://sa:YourStrong!Pass@db:1433/jobdb?driver=ODBC+Driver+17+for+SQL+Server
+      SECRET_KEY: dev_secret
+      BLS_API_KEY: YOUR_BLS_KEY
+    ports:
+      - "5000:5000"
+  db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      SA_PASSWORD: "YourStrong!Pass"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"

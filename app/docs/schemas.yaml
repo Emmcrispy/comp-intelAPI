@@ -1,0 +1,115 @@
+components:
+  schemas:
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+      required:
+        - id
+        - username
+
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+        - id
+        - name
+
+    AuthRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+
+    Job:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        function:
+          type: string
+        family:
+          type: string
+        sub_family:
+          type: string
+        level:
+          type: string
+        sca_code:
+          type: string
+        locality:
+          type: string
+        base_rate:
+          type: number
+          format: float
+        fringe_benefits:
+          type: number
+          format: float
+        tax_burden:
+          type: number
+          format: float
+        total_cost_per_hour:
+          type: number
+          format: float
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - description
+
+    JobUploadResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+
+    BLSRequest:
+      type: object
+      properties:
+        seriesid:
+          type: array
+          items:
+            type: string
+        startyear:
+          type: string
+        endyear:
+          type: string
+      required:
+        - seriesid
+        - startyear
+        - endyear
+
+    BLSData:
+      type: object
+      properties:
+        status:
+          type: string
+        response:
+          type: object
