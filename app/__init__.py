@@ -29,17 +29,26 @@ def create_app():
         "title": "Compensation API",
         "openapi": "3.0.2",
         "uiversion": 3,
-        "specs": [
+        "specs": [  # include all routes
             {
                 "endpoint": "apispec_1",
                 "route": "/apispec_1.json",
-                # include all routes
                 "rule_filter": lambda rule: True,
-                # include all models
                 "model_filter": lambda tag: True,
             }
         ],
-        "specs_route": "/apidocs/"
+        "specs_route": "/apidocs/",
+        "securityDefinitions": {
+            "Bearer": {
+                "type": "apiKey",
+                "name": "Authorization",
+                "in": "header",
+                "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+            }
+        },
+        "security": [
+            { "Bearer": [] }
+        ]
     }
     swagger.init_app(app)
 
