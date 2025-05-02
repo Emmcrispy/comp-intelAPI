@@ -19,7 +19,7 @@ def salary_distribution():
     tags:
       - Reports
     security:
-      - bearerAuth: []
+      - Bearer: []
     responses:
       200:
         description: PNG bar chart
@@ -52,6 +52,8 @@ def export_matches():
     ---
     tags:
       - Reports
+    security:
+      - Bearer: []
     requestBody:
       required: true
       content:

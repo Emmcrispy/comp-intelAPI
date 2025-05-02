@@ -9,6 +9,7 @@ class Config:
     KEY_VAULT_NAME = os.getenv('AZURE_KEY_VAULT_NAME')
     BLS_API_KEY = os.getenv('BLS_API_KEY')  # BLS API key (placeholder)
 
+
 class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.getenv('DEV_DATABASE_URI',

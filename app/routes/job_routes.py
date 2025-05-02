@@ -15,6 +15,8 @@ def upload_jobs():
     ---
     tags:
       - Jobs
+    security:
+      - Bearer: []
     requestBody:
       required: true
       content:
@@ -58,6 +60,8 @@ def search_jobs():
     ---
     tags:
       - Jobs
+    security:
+      - Bearer: []
     parameters:
       - name: q
         in: query
@@ -106,6 +110,8 @@ def match_job():
     ---
     tags:
       - Jobs
+    security:
+      - Bearer: []
     requestBody:
       required: true
       content:

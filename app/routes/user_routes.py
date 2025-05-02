@@ -13,7 +13,7 @@ def me():
     tags:
       - User
     security:
-      - bearerAuth: []
+      - Bearer: []
     responses:
       200:
         description: Current user details

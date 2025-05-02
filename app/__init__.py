@@ -2,20 +2,24 @@ import os
 from flask import Flask
 from flasgger import Swagger
 from .config import DevelopmentConfig, ProductionConfig
-from .extensions import db, jwt, cors, swagger
-from .routes import auth_routes, job_routes, bls_routes, report_routes
-from .routes.main_routes import bp as main_bp
-from .routes.user_routes import bp as user_bp
-from .commands import init_app as register_commands
+from .extensions import db, jwt, cors
 
+# Import each Blueprint
+from .routes.auth_routes   import bp as auth_bp
+from .routes.job_routes    import bp as jobs_bp
+from .routes.bls_routes    import bp as bls_bp
+from .routes.report_routes import bp as reports_bp
+from .routes.main_routes   import bp as main_bp
+from .routes.user_routes   import bp as user_bp
+
+from .commands import init_app as register_commands
 
 def create_app():
     app = Flask(__name__)
-    # Choose config based on environment
+
+    # Load config
     if os.getenv('FLASK_ENV') == 'production':
         app.config.from_object(ProductionConfig)
-        # Optionally override from Key Vault:
-        # app.config['SQLALCHEMY_DATABASE_URI'] = get_secret('AzureSQLConnectionString')
     else:
         app.config.from_object(DevelopmentConfig)
 
@@ -24,44 +28,55 @@ def create_app():
     jwt.init_app(app)
     cors.init_app(app)
 
-    # Swagger configuration
-    app.config['SWAGGER'] = {
-        "title": "Compensation API",
-        "openapi": "3.0.2",
-        "uiversion": 3,
-        "specs": [  # include all routes
+    # --- Swagger / OpenAPI Setup ---
+    swagger_config = {
+        "headers": [],
+        "specs": [
             {
                 "endpoint": "apispec_1",
-                "route": "/apispec_1.json",
-                "rule_filter": lambda rule: True,
-                "model_filter": lambda tag: True,
+                "route":    "/apispec_1.json",
+                "rule_filter":  lambda rule: True,   # include all routes
+                "model_filter": lambda tag: True     # include all models
             }
         ],
-        "specs_route": "/apidocs/",
+        "static_url_path": "/flasgger_static",
+        "swagger_ui": True,
+        "specs_route": "/apidocs/"
+    }
+
+    swagger_template = {
+        "swagger": "2.0",
+        "info": {
+            "title":       "Compensation API",
+            "version":     "1.0.0",
+            "description": "Production-ready Flask API for compensation analytics, Azure AI & ML enabled"
+        },
         "securityDefinitions": {
             "Bearer": {
-                "type": "apiKey",
-                "name": "Authorization",
-                "in": "header",
-                "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+                "type":        "apiKey",
+                "name":        "Authorization",
+                "in":          "header",
+                "description": (
+                    "JWT Authorization header using the Bearer scheme. "
+                    "Enter: **Bearer <token>**"
+                )
             }
-        },
-        "security": [
-            { "Bearer": [] }
-        ]
+        }
+        # ← no global "security" here; you can add per-route
     }
-    swagger.init_app(app)
 
-    # Register main & health-check routes
-    app.register_blueprint(main_bp)
+    # Instantiate Swagger with both config & template so the Authorize UI appears
+    Swagger(app, config=swagger_config, template=swagger_template)
 
     # Register blueprints
-    app.register_blueprint(auth_routes.bp)
-    app.register_blueprint(job_routes.bp)
-    app.register_blueprint(bls_routes.bp)
-    app.register_blueprint(report_routes.bp)
-    app.register_blueprint(user_bp)
+    app.register_blueprint(main_bp)                          # GET /
+    app.register_blueprint(auth_bp,    url_prefix='/api/auth')
+    app.register_blueprint(jobs_bp,    url_prefix='/api/jobs')
+    app.register_blueprint(bls_bp,     url_prefix='/api/bls')
+    app.register_blueprint(reports_bp, url_prefix='/api/reports')
+    app.register_blueprint(user_bp,    url_prefix='/api/user')
 
+    # Register CLI commands (e.g. flask init-db)
     register_commands(app)
 
     return app

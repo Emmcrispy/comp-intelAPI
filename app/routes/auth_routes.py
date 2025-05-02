@@ -13,27 +13,29 @@ def register():
     ---
     tags:
       - Auth
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - username
-              - password
-            properties:
-              username:
-                type: string
-              password:
-                type: string
+    parameters:
+      - in: body
+        name: user
+        required: true
+        schema:
+          type: object
+          required:
+            - username
+            - password
+          properties:
+            username:
+              type: string
+              example: admin
+            password:
+              type: string
+              example: AdminPass123
     responses:
       201:
         description: User registered successfully
       400:
-        description: Username already exists or bad request
+        description: Bad request or user exists
     """
-    data = request.get_json()
+    data = request.get_json() or {}
     username = data.get('username')
     password = data.get('password')
     if not username or not password:
@@ -57,39 +59,45 @@ def login():
     ---
     tags:
       - Auth
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - username
-              - password
-            properties:
-              username:
-                type: string
-              password:
-                type: string
+    parameters:
+      - in: body
+        name: credentials
+        required: true
+        schema:
+          type: object
+          required:
+            - username
+            - password
+          properties:
+            username:
+              type: string
+              example: admin
+            password:
+              type: string
+              example: AdminPass123
     responses:
       200:
         description: Login successful, returns access token
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                access_token:
-                  type: string
+        schema:
+          type: object
+          properties:
+            access_token:
+              type: string
       401:
         description: Bad credentials
     """
-    data = request.get_json()
+    data = request.get_json() or {}
     username = data.get('username')
     password = data.get('password')
+
+    if not username or not password:
+        return jsonify(msg="Missing username or password"), 400
+
     user = User.query.filter_by(username=username).first()
     if not user or not user.check_password(password):
         return jsonify(msg="Bad credentials"), 401
+
+    # include roles in the token if you like
     roles = [r.name for r in user.roles]
     token = create_access_token(identity=user.id, additional_claims={"roles": roles})
     return jsonify(access_token=token), 200
@@ -103,7 +111,7 @@ def admin_only():
     tags:
       - Auth
     security:
-      - bearerAuth: []
+      - Bearer: []
     responses:
       200:
         description: Welcome, admin!
