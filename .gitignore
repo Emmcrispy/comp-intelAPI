@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
 
 # Virtual environments
 .venv/
@@ -25,6 +26,14 @@ instance/
 
 # Logs
 *.log
+
+# Docker build context exclusions
+Dockerfile
+docker-compose.yml
+
+# Editor/IDE
+.vscode/
+.idea/
 
 # Distribution / packaging
 build/
