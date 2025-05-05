@@ -83,10 +83,16 @@ def login():
           properties:
             access_token:
               type: string
+      400:
+        description: Missing username or password
       401:
         description: Bad credentials
     """
-    data = request.get_json() or {}
+    # 1) Enforce JSON
+    if not request.is_json:
+        return jsonify(msg="Request must be JSON"), 400
+
+    data = request.get_json()
     username = data.get('username')
     password = data.get('password')
 
@@ -97,9 +103,11 @@ def login():
     if not user or not user.check_password(password):
         return jsonify(msg="Bad credentials"), 401
 
-    # include roles in the token if you like
-    roles = [r.name for r in user.roles]
-    token = create_access_token(identity=user.id, additional_claims={"roles": roles})
+    # 2) Use a string identity (PyJWT requires sub to be string)
+    token = create_access_token(
+        identity=user.username,
+        additional_claims={"roles": [r.name for r in user.roles]}
+    )
     return jsonify(access_token=token), 200
 
 @bp.route('/admin-only', methods=['GET'])

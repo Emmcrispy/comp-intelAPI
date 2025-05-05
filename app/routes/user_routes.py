@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.user import User
+from app.utils.user_utils import serialize_user
 
 bp = Blueprint('user', __name__, url_prefix='/api/user')
 
@@ -33,10 +34,10 @@ def me():
     401:
       description: Missing or invalid token
     """
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    return jsonify(
-        id=user.id,
-        username=user.username,
-        roles=[r.name for r in user.roles]
-    ), 200
+    identity = get_jwt_identity()
+    # Lookup by username (since that’s what we used as identity)
+    user = User.query.filter_by(username=identity).first()
+    if not user:
+        return jsonify(msg="User not found"), 404
+
+    return jsonify(serialize_user(user)), 200

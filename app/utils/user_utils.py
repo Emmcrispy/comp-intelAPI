@@ -1,6 +1,7 @@
 from app.extensions import db
 from app.models.user import User
 from app.models.role import Role
+from werkzeug.security import generate_password_hash, check_password_hash
 
 def create_default_roles():
     """
