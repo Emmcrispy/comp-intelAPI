@@ -1,8 +1,15 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import os
 from flask import Flask
 from flasgger import Swagger
+
 from .config import DevelopmentConfig, ProductionConfig
 from .extensions import db, jwt, cors
+
+# We need the User model to load roles into JWTs
+from app.models.user import User
 
 # Import each Blueprint
 from .routes.auth_routes   import bp as auth_bp
@@ -14,6 +21,7 @@ from .routes.user_routes   import bp as user_bp
 
 from .commands import init_app as register_commands
 
+
 def create_app():
     app = Flask(__name__)
 
@@ -23,10 +31,23 @@ def create_app():
     else:
         app.config.from_object(DevelopmentConfig)
 
+    # Debug print to confirm the DB URI is loaded correctly
+    print("→ Using SQLALCHEMY_DATABASE_URI:", app.config['SQLALCHEMY_DATABASE_URI'])
+
     # Initialize extensions
     db.init_app(app)
     jwt.init_app(app)
     cors.init_app(app)
+
+    # Embed roles into every access token
+    @jwt.additional_claims_loader
+    def add_roles_to_claims(identity):
+        """
+        Adds a 'roles' claim to the JWT from the user's roles in the database.
+        `identity` here is the username we passed to create_access_token().
+        """
+        user = User.query.filter_by(username=identity).first()
+        return {"roles": [r.name for r in user.roles]} if user else {}
 
     # --- Swagger / OpenAPI Setup ---
     swagger_config = {
@@ -57,12 +78,15 @@ def create_app():
                 "name":        "Authorization",
                 "in":          "header",
                 "description": (
-                    "JWT Authorization header using the Bearer scheme. "
-                    "Enter: **Bearer <token>**"
+                    "JWT authorization header using the Bearer scheme. "
+                    "Enter: **Bearer <your JWT>**"
                 )
             }
-        }
-        # ← no global "security" here; you can add per-route
+        },
+        # Apply the Bearer security scheme globally to all endpoints
+        "security": [
+            { "Bearer": [] }
+        ]
     }
 
     # Instantiate Swagger with both config & template so the Authorize UI appears

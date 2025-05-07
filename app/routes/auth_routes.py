@@ -3,6 +3,7 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt
 from app.extensions import db
 from app.models.user import User
 from app.models.role import Role, user_roles
+from app.utils.user_utils import roles_required
 
 bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
@@ -112,6 +113,7 @@ def login():
 
 @bp.route('/admin-only', methods=['GET'])
 @jwt_required()
+@roles_required('admin')
 def admin_only():
     """
     Admin-only route
