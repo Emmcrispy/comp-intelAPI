@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev_secret')  # JWT secret, etc.
@@ -9,6 +10,12 @@ class Config:
     KEY_VAULT_NAME = os.getenv('AZURE_KEY_VAULT_NAME')
     BLS_API_KEY = os.getenv('BLS_API_KEY')  # BLS API key (placeholder)
 
+    # ── JWT Token Lifetimes ───────────────────────────────────────────────────
+    # Access tokens: 2 hours
+    JWT_ACCESS_TOKEN_EXPIRES  = timedelta(hours=2)
+    # Refresh tokens: 30 days
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
+    # ───────────────────────────────────────────────────────────────────────────
 class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.getenv('DEV_DATABASE_URI')

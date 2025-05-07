@@ -2,22 +2,22 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
+from datetime import datetime
 from flask import Flask
 from flasgger import Swagger
+from flask_jwt_extended import get_jwt, get_jwt_identity, create_access_token
 
-from .config import DevelopmentConfig, ProductionConfig
+from .config     import DevelopmentConfig, ProductionConfig
 from .extensions import db, jwt, cors
+from app.models.user import User  # so we can load roles into JWTs
 
-# We need the User model to load roles into JWTs
-from app.models.user import User
-
-# Import each Blueprint
+# Blueprints
+from .routes.main_routes   import bp as main_bp
 from .routes.auth_routes   import bp as auth_bp
+from .routes.user_routes   import bp as user_bp
 from .routes.job_routes    import bp as jobs_bp
 from .routes.bls_routes    import bp as bls_bp
 from .routes.report_routes import bp as reports_bp
-from .routes.main_routes   import bp as main_bp
-from .routes.user_routes   import bp as user_bp
 
 from .commands import init_app as register_commands
 
@@ -25,13 +25,15 @@ from .commands import init_app as register_commands
 def create_app():
     app = Flask(__name__)
 
-    # Load config
+    # Choose config based on environment
     if os.getenv('FLASK_ENV') == 'production':
         app.config.from_object(ProductionConfig)
+        # Optionally override from Key Vault:
+        # app.config['SQLALCHEMY_DATABASE_URI'] = get_secret('AzureSQLConnectionString')
     else:
         app.config.from_object(DevelopmentConfig)
 
-    # Debug print to confirm the DB URI is loaded correctly
+    # Debug print to confirm app sees correct URI
     print("→ Using SQLALCHEMY_DATABASE_URI:", app.config['SQLALCHEMY_DATABASE_URI'])
 
     # Initialize extensions
@@ -39,33 +41,49 @@ def create_app():
     jwt.init_app(app)
     cors.init_app(app)
 
-    # Embed roles into every access token
+    # Embed roles into every token
     @jwt.additional_claims_loader
-    def add_roles_to_claims(identity):
-        """
-        Adds a 'roles' claim to the JWT from the user's roles in the database.
-        `identity` here is the username we passed to create_access_token().
-        """
+    def add_roles(identity):
         user = User.query.filter_by(username=identity).first()
         return {"roles": [r.name for r in user.roles]} if user else {}
 
-    # --- Swagger / OpenAPI Setup ---
-    swagger_config = {
+    # Sliding‐expiration: refresh token if it's about to expire
+    @jwt.token_in_blocklist_loader
+    def never_block(jwt_header, jwt_payload):
+        return False  # no blacklist by default
+
+    @app.after_request
+    def refresh_expiring_jwts(response):
+        try:
+            exp = get_jwt()["exp"]
+            now = datetime.utcnow().timestamp()
+            # if fewer than 30 minutes remaining...
+            if exp - now < 1800:
+                new_token = create_access_token(
+                    identity=get_jwt_identity(),
+                    fresh=False
+                )
+                response.headers["X-New-Token"] = new_token
+        except Exception:
+            pass
+        return response
+
+    # Swagger setup
+    swagger_conf = {
         "headers": [],
         "specs": [
             {
                 "endpoint": "apispec_1",
                 "route":    "/apispec_1.json",
-                "rule_filter":  lambda rule: True,   # include all routes
-                "model_filter": lambda tag: True     # include all models
+                "rule_filter":  lambda rule: True,
+                "model_filter": lambda tag: True,
             }
         ],
         "static_url_path": "/flasgger_static",
         "swagger_ui": True,
         "specs_route": "/apidocs/"
     }
-
-    swagger_template = {
+    swagger_tpl = {
         "swagger": "2.0",
         "info": {
             "title":       "Compensation API",
@@ -77,30 +95,39 @@ def create_app():
                 "type":        "apiKey",
                 "name":        "Authorization",
                 "in":          "header",
-                "description": (
-                    "JWT authorization header using the Bearer scheme. "
-                    "Enter: **Bearer <your JWT>**"
-                )
+                "description": "JWT: Bearer <token>"
             }
         },
-        # Apply the Bearer security scheme globally to all endpoints
         "security": [
-            { "Bearer": [] }
-        ]
+            {"Bearer": []}
+        ],
+        "components": {
+            "schemas": {
+                "User": {
+                    "type": "object",
+                    "properties": {
+                        "id":       {"type": "integer"},
+                        "username": {"type": "string"},
+                        "roles": {
+                            "type":  "array",
+                            "items": {"type": "string"}
+                        }
+                    }
+                }
+            }
+        }
     }
-
-    # Instantiate Swagger with both config & template so the Authorize UI appears
-    Swagger(app, config=swagger_config, template=swagger_template)
+    Swagger(app, config=swagger_conf, template=swagger_tpl)
 
     # Register blueprints
-    app.register_blueprint(main_bp)                          # GET /
-    app.register_blueprint(auth_bp,    url_prefix='/api/auth')
-    app.register_blueprint(jobs_bp,    url_prefix='/api/jobs')
-    app.register_blueprint(bls_bp,     url_prefix='/api/bls')
-    app.register_blueprint(reports_bp, url_prefix='/api/reports')
-    app.register_blueprint(user_bp,    url_prefix='/api/user')
+    app.register_blueprint(main_bp)    # GET /
+    app.register_blueprint(auth_bp)    # /api/auth/*
+    app.register_blueprint(user_bp)    # /api/user/*
+    app.register_blueprint(jobs_bp)    # /api/jobs/*
+    app.register_blueprint(bls_bp)     # /api/bls/*
+    app.register_blueprint(reports_bp) # /api/reports/*
 
-    # Register CLI commands (e.g. flask init-db)
+    # Register CLI commands (flask init-db, etc.)
     register_commands(app)
 
     return app

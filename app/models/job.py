@@ -28,5 +28,12 @@ class Job(db.Model):
         onupdate=datetime.utcnow
     )
 
-    def __repr__(self):
-        return f"<Job id={self.id} title={self.title!r}>"
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "base_rate": self.base_rate,
+            "sca_code": self.sca_code,
+            # etc.
+        }
